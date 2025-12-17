@@ -1,0 +1,194 @@
+/* ==============================
+   RESET E BASE
+============================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #f3f4f6;
+  overflow: hidden;
+}
+
+/* ==============================
+   ESCONDER INTERFACE ANTIGA
+   (CRÍTICO)
+============================== */
+
+/* Qualquer menu antigo no topo */
+.tabs-menu,
+nav,
+header,
+.menu,
+#menu,
+#tabs {
+  display: none !important;
+}
+
+/* ==============================
+   LAYOUT PRINCIPAL
+============================== */
+
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ==============================
+   SIDEBAR
+============================== */
+
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, #0f172a, #020617);
+  color: #fff;
+  padding: 20px;
+  flex-shrink: 0;
+}
+
+.sidebar h2 {
+  margin-bottom: 20px;
+}
+
+.sidebar button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: none;
+  background: #1e293b;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.sidebar button.active,
+.sidebar button:hover {
+  background: #2563eb;
+}
+
+/* ==============================
+   CONTEÚDO
+============================== */
+
+.main {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* ==============================
+   CONTROLE DE ABAS
+============================== */
+
+.tab {
+  display: none;
+}
+
+.tab.active {
+  display: block;
+}
+
+/* ==============================
+   HEADER
+============================== */
+
+.header {
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+
+/* ==============================
+   DASHBOARD
+============================== */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 10px;
+}
+
+.card span {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.card h2 {
+  margin-top: 6px;
+}
+
+/* ==============================
+   CORES
+============================== */
+
+.text-green {
+  color: #16a34a;
+}
+
+.text-red {
+  color: #dc2626;
+}
+
+/* ==============================
+   FORMULÁRIO
+============================== */
+
+.form-card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+input,
+select {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ==============================
+   TABELAS
+============================== */
+
+.table {
+  background: #fff;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}

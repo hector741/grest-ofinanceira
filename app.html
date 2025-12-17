@@ -1,0 +1,524 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Gestao Financeira - Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;}
+:root{
+  --bg:#0b1021;
+  --sidebar:#0f172a;
+  --panel:#0b192f;
+  --surface:#0f172a;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --stroke:#1f2937;
+  --primary:#2563eb;
+  --primary-strong:#1d4ed8;
+  --green:#22c55e;
+  --red:#ef4444;
+  --amber:#f59e0b;
+  --warning:#fbbf24;
+}
+body{min-height:100vh;background:linear-gradient(135deg,#0b1021 0%,#0c1429 40%,#0b1021 100%);color:var(--text);display:flex;}
+a{text-decoration:none;color:inherit;}
+button{cursor:pointer;border:none;background:none;color:inherit;font:inherit;}
+.sidebar{width:240px;background:var(--sidebar);border-right:1px solid rgba(148,163,184,0.08);padding:22px 18px;display:flex;flex-direction:column;gap:20px;}
+.brand{display:flex;align-items:center;gap:12px;}
+.badge{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#2563eb);display:grid;place-items:center;font-weight:700;color:#fff;letter-spacing:0.4px;}
+.brand .title{font-weight:700;font-size:18px;}
+.brand .subtitle{color:var(--muted);font-size:12px;}
+.nav{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+.nav button{text-align:left;padding:12px 12px;border-radius:12px;border:1px solid transparent;transition:background 0.15s ease,border 0.15s ease,color 0.15s ease;color:var(--muted);}
+.nav button.active{background:rgba(37,99,235,0.12);border-color:rgba(37,99,235,0.25);color:#bfdbfe;}
+.nav button:hover{background:rgba(255,255,255,0.03);}
+.sidebar .footer{margin-top:auto;padding-top:12px;border-top:1px solid rgba(148,163,184,0.08);color:var(--muted);font-size:13px;}
+.user-pill{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(148,163,184,0.12);margin-bottom:8px;}
+.main{flex:1;padding:26px;overflow-x:hidden;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.title-block .muted{color:var(--muted);font-size:13px;}
+.btn-primary{padding:11px 14px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary-strong));color:#fff;font-weight:700;box-shadow:0 12px 24px rgba(37,99,235,0.3);transition:transform 0.1s ease,box-shadow 0.1s ease;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 16px 28px rgba(37,99,235,0.35);}
+.grid{display:grid;gap:14px;}
+.cards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:16px;}
+.cards.horizontal{grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);overflow-x:auto;padding-bottom:8px;}
+.card{background:linear-gradient(145deg,rgba(15,23,42,0.95),rgba(11,25,47,0.9));border:1px solid rgba(148,163,184,0.12);border-radius:16px;padding:14px 16px;box-shadow:0 12px 36px rgba(0,0,0,0.28);}
+.card h3{font-size:13px;color:var(--muted);margin-bottom:6px;}
+.value{font-size:24px;font-weight:700;} .value.green{color:var(--green);} .value.red{color:var(--red);} .muted{color:var(--muted);} 
+.panel{background:rgba(10,16,30,0.85);border:1px solid rgba(148,163,184,0.12);border-radius:16px;padding:16px;box-shadow:0 16px 42px rgba(0,0,0,0.25);backdrop-filter:blur(8px);margin-bottom:14px;}
+.panel h4{margin-bottom:12px;}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;}
+label{display:block;margin-bottom:6px;font-size:13px;color:var(--muted);}
+input, select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid #1f2937;background:rgba(20,30,50,0.75);color:var(--text);transition:border 0.15s ease, box-shadow 0.15s ease;}
+input:focus, select:focus{outline:none;border-color:rgba(37,99,235,0.7);box-shadow:0 0 0 3px rgba(37,99,235,0.2);}
+.btn-secondary{padding:11px 12px;border-radius:12px;border:1px solid rgba(148,163,184,0.2);background:rgba(255,255,255,0.03);color:var(--text);font-weight:700;}
+.table{width:100%;border-collapse:collapse;margin-top:8px;}
+.table th,.table td{text-align:left;padding:10px 8px;border-bottom:1px solid rgba(148,163,184,0.12);font-size:13px;}
+.table th{color:var(--muted);font-weight:600;}
+.chip{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;}
+.chip.in{background:rgba(34,197,94,0.15);color:#86efac;}
+.chip.out{background:rgba(239,68,68,0.15);color:#fca5a5;}
+.chip.rec{background:rgba(59,130,246,0.15);color:#bfdbfe;}
+.chip.avu{background:rgba(255,255,255,0.08);color:#e5e7eb;}
+.chip.var{background:rgba(245,158,11,0.18);color:#fcd34d;}
+.chip.pago{background:rgba(34,197,94,0.12);color:#bbf7d0;}
+.action{color:#fca5a5;background:none;border:none;cursor:pointer;}
+.empty{text-align:center;color:var(--muted);padding:14px;}
+.section{display:none;animation:fade 0.2s ease;}
+.section.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.alert-positive{color:var(--green);font-weight:700;}
+.alert-negative{color:var(--red);font-weight:700;}
+.badge-month{padding:6px 10px;border-radius:10px;font-size:12px;border:1px solid rgba(148,163,184,0.2);}
+.table-scroll{overflow:auto;}
+.feedback{margin-top:8px;font-size:13px;} .feedback.error{color:var(--red);} .feedback.success{color:var(--green);} 
+.teto-ok{color:var(--green);font-weight:700;} .teto-alerta{color:var(--warning);font-weight:700;} .teto-estouro{color:var(--red);font-weight:700;}
+@media (max-width:960px){body{flex-direction:column;} .sidebar{width:100%;flex-direction:row;overflow-x:auto;gap:12px;} .nav{flex-direction:row;flex-wrap:wrap;} .main{padding:18px;} .cards.horizontal{grid-auto-columns:80%;gap:10px;}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="brand">
+    <div class="badge">GF</div>
+    <div>
+      <div class="title">Gestao Financeira</div>
+      <div class="subtitle">Decisoes claras</div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="active" data-section="dashboard">Dashboard</button>
+    <button data-section="lancamentos">Lancamentos</button>
+    <button data-section="planejamento">Planejamento</button>
+    <button data-section="cartoes">Cartoes</button>
+    <button data-section="dividas">Dividas</button>
+    <button data-section="assinaturas">Assinaturas</button>
+    <button data-section="patrimonio">Patrimonio</button>
+  </div>
+  <div class="footer">
+    <div class="user-pill">
+      <span id="usuario"></span>
+      <button class="action" onclick="sair()">Sair</button>
+    </div>
+    Dados salvos no seu navegador.
+  </div>
+</div>
+
+<main class="main">
+  <div class="topbar">
+    <div class="title-block">
+      <h2 id="titulo-pagina">Dashboard</h2>
+      <div class="muted">Quanto vou pagar e quanto vai sobrar em cada mes do ano.</div>
+    </div>
+    <button class="btn-primary" onclick="scrollToForm()">Novo lancamento</button>
+  </div>
+
+  <!-- Dashboard -->
+  <section id="dashboard" class="section active">
+    <div class="grid cards horizontal">
+      <div class="card">
+        <h3>Receitas do mes</h3>
+        <div class="value green" id="dash-receitas">R$ 0,00</div>
+        <div class="muted" id="dash-receitas-info"></div>
+      </div>
+      <div class="card">
+        <h3>Despesas do mes</h3>
+        <div class="value red" id="dash-despesas">R$ 0,00</div>
+        <div class="muted" id="dash-despesas-info"></div>
+      </div>
+      <div class="card">
+        <h3>Saldo mensal</h3>
+        <div class="value" id="dash-saldo">R$ 0,00</div>
+        <div class="muted" id="dash-saldo-info"></div>
+      </div>
+      <div class="card">
+        <h3>Recorrentes x Avulsos</h3>
+        <div class="value" id="dash-recorrentes">R$ 0,00</div>
+        <div class="muted" id="dash-avulsos"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h4>Tetos por categoria (mes atual)</h4>
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Categoria</th><th>Teto</th><th>Gasto</th><th>Status</th></tr></thead>
+          <tbody id="tabela-tetos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h4>Projecao anual (quanto vou pagar e quanto sobra)</h4>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr><th>Mes</th><th>Receitas</th><th>Despesas</th><th>Cartao</th><th>Dividas</th><th>Assinaturas</th><th>Saldo</th></tr>
+          </thead>
+          <tbody id="tabela-planejamento-ano"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lancamentos -->
+  <section id="lancamentos" class="section">
+    <div class="panel" id="form-lancamento">
+      <h4>Novo lancamento</h4>
+      <div class="form-row">
+        <div><label for="data">Data</label><input type="date" id="data"></div>
+        <div><label for="descricao">Descricao</label><input id="descricao" placeholder="Ex: Salario, Mercado"></div>
+        <div><label for="tipo">Tipo</label>
+          <select id="tipo">
+            <option value="receita">Receita</option>
+            <option value="despesa">Despesa</option>
+          </select>
+        </div>
+        <div><label for="recorrencia">Recorrencia</label>
+          <select id="recorrencia">
+            <option value="fixa">Fixa (todo mes)</option>
+            <option value="avulsa">Nao fixa / pontual</option>
+          </select>
+        </div>
+        <div><label for="variavel">Despesa variavel?</label>
+          <select id="variavel">
+            <option value="nao">Nao</option>
+            <option value="sim">Sim (previsto vs pago)</option>
+          </select>
+        </div>
+        <div><label for="categoria">Categoria</label>
+          <select id="categoria"></select>
+        </div>
+        <div><label for="valor-previsto">Valor previsto</label><input id="valor-previsto" type="number" step="0.01" min="0"></div>
+        <div><label for="valor-pago">Valor pago (opcional)</label><input id="valor-pago" type="number" step="0.01" min="0" placeholder="Preencha se ja pago"></div>
+        <div><label for="forma">Forma de pagamento</label><input id="forma" placeholder="Cartao, Pix, Dinheiro"></div>
+      </div>
+      <div class="muted" style="margin:6px 0 2px;">Para despesas variaveis, informe um valor previsto e registre o pago na lista quando pagar.</div>
+      <button class="btn-primary" onclick="adicionarLancamento()">Salvar</button>
+      <div class="feedback" id="feedback-lanc"></div>
+    </div>
+
+    <div class="panel">
+      <h4>Categorias e tetos</h4>
+      <div class="form-row" style="margin-bottom:10px;">
+        <div><label for="nova-cat">Nova categoria</label><input id="nova-cat" placeholder="Ex: Academia"></div>
+        <div><label for="teto-cat">Teto mensal (opcional)</label><input id="teto-cat" type="number" step="0.01" min="0" placeholder="Ex: 500,00"></div>
+        <div style="align-self:end;"><button class="btn-secondary" onclick="adicionarCategoria()">Adicionar categoria</button></div>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Categoria</th><th>Teto</th><th>Gasto no mes</th><th>Status</th><th></th></tr></thead>
+          <tbody id="lista-categorias"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h4>Lancamentos</h4>
+      <div class="form-row" style="margin-bottom:10px;">
+        <div><label for="filtro-mes">Periodo</label>
+          <select id="filtro-mes" onchange="renderizarTudo()">
+            <option value="mes">Mes atual</option>
+            <option value="30">Ultimos 30 dias</option>
+            <option value="todos">Tudo</option>
+          </select>
+        </div>
+        <div><label for="filtro-tipo">Tipo</label>
+          <select id="filtro-tipo" onchange="renderizarTudo()">
+            <option value="todos">Todos</option>
+            <option value="receita">Receitas</option>
+            <option value="despesa">Despesas</option>
+          </select>
+        </div>
+        <div><label for="busca">Buscar</label><input id="busca" placeholder="Descricao ou categoria" oninput="renderizarTudo()"></div>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr><th>Data</th><th>Descricao</th><th>Categoria</th><th>Tipo</th><th>Recorr.</th><th>Variavel</th><th>Previsto</th><th>Pago</th><th>Forma</th><th></th></tr>
+          </thead>
+          <tbody id="lista-lanc"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="vazio-lanc" style="display:none;">Nenhum lancamento.</div>
+    </div>
+  </section>
+
+  <!-- Planejamento -->
+  <section id="planejamento" class="section">
+    <div class="panel">
+      <h4>Planejamento mensal e anual</h4>
+      <div class="muted" style="margin-bottom:10px;">Simulacao automatica combinando fixos, variaveis, cartoes, dividas e assinaturas.</div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr><th>Mes</th><th>Receitas</th><th>Despesas</th><th>Cartao</th><th>Dividas</th><th>Assinaturas</th><th>Saldo</th></tr>
+          </thead>
+          <tbody id="tabela-planejamento"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cartoes -->
+  <section id="cartoes" class="section">
+    <div class="panel">
+      <h4>Cadastro de compras no cartao</h4>
+      <div class="form-row">
+        <div><label for="cartao-nome">Cartao</label><input id="cartao-nome" placeholder="Visa, Mastercard..."></div>
+        <div><label for="cartao-desc">Descricao</label><input id="cartao-desc" placeholder="Ex: Notebook"></div>
+        <div><label for="cartao-data">Data da compra</label><input type="date" id="cartao-data"></div>
+        <div><label for="cartao-valor">Valor total</label><input type="number" step="0.01" min="0" id="cartao-valor"></div>
+        <div><label for="cartao-parcelas">Parcelas</label><input type="number" id="cartao-parcelas" min="1" value="1"></div>
+      </div>
+      <button class="btn-primary" onclick="adicionarCartao()">Salvar compra</button>
+      <div class="feedback" id="feedback-cartao"></div>
+    </div>
+
+    <div class="panel">
+      <h4>Parcelas distribuidas</h4>
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Cartao</th><th>Descricao</th><th>Parcela</th><th>Mes</th><th>Valor</th><th></th></tr></thead>
+          <tbody id="lista-cartao"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="vazio-cartao" style="display:none;">Nenhuma compra cadastrada.</div>
+    </div>
+  </section>
+
+  <!-- Dividas -->
+  <section id="dividas" class="section">
+    <div class="panel">
+      <h4>Dividas / Financiamentos</h4>
+      <div class="form-row">
+        <div><label for="divida-nome">Nome</label><input id="divida-nome" placeholder="Ex: Carro"></div>
+        <div><label for="divida-valor">Valor total</label><input type="number" step="0.01" min="0" id="divida-valor"></div>
+        <div><label for="divida-juros">Juros (% opcional)</label><input type="number" step="0.01" id="divida-juros"></div>
+        <div><label for="divida-parcelas">Parcelas</label><input type="number" min="1" id="divida-parcelas" value="1"></div>
+        <div><label for="divida-data">Inicio</label><input type="date" id="divida-data"></div>
+      </div>
+      <button class="btn-primary" onclick="adicionarDivida()">Salvar divida</button>
+      <div class="feedback" id="feedback-divida"></div>
+    </div>
+
+    <div class="panel">
+      <h4>Impacto mensal</h4>
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Nome</th><th>Parcela</th><th>Mes</th><th>Valor</th><th></th></tr></thead>
+          <tbody id="lista-dividas"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="vazio-dividas" style="display:none;">Nenhuma divida.</div>
+    </div>
+  </section>
+
+  <!-- Assinaturas -->
+  <section id="assinaturas" class="section">
+    <div class="panel">
+      <h4>Assinaturas</h4>
+      <div class="form-row">
+        <div><label for="ass-nome">Nome</label><input id="ass-nome" placeholder="Netflix, Spotify"></div>
+        <div><label for="ass-cat">Categoria</label><input id="ass-cat" placeholder="Streaming, Musica"></div>
+        <div><label for="ass-valor">Valor mensal</label><input type="number" step="0.01" min="0" id="ass-valor"></div>
+        <div><label for="ass-dia">Dia de cobranca</label><input type="number" min="1" max="31" id="ass-dia"></div>
+        <div><label for="ass-forma">Forma de pagamento</label><input id="ass-forma" placeholder="Cartao, Debito"></div>
+        <div><label for="ass-status">Status</label>
+          <select id="ass-status">
+            <option value="ativa">Ativa</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="adicionarAssinatura()">Salvar assinatura</button>
+      <div class="feedback" id="feedback-ass"></div>
+    </div>
+
+    <div class="panel">
+      <h4>Lista de assinaturas</h4>
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Nome</th><th>Categoria</th><th>Valor</th><th>Dia</th><th>Status</th><th></th></tr></thead>
+          <tbody id="lista-ass"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="vazio-ass" style="display:none;">Nenhuma assinatura.</div>
+    </div>
+  </section>
+
+  <!-- Patrimonio -->
+  <section id="patrimonio" class="section">
+    <div class="panel">
+      <h4>Patrimonio liquido</h4>
+      <div class="form-row">
+        <div><label for="pat-ativos">Ativos (investimentos, saldo)</label><input type="number" step="0.01" min="0" id="pat-ativos"></div>
+        <div><label for="pat-passivos">Passivos (dividas)</label><input type="number" step="0.01" min="0" id="pat-passivos"></div>
+      </div>
+      <button class="btn-primary" onclick="salvarPatrimonio()">Atualizar patrimonio</button>
+      <div class="feedback" id="feedback-pat"></div>
+    </div>
+    <div class="grid cards">
+      <div class="card">
+        <h3>Ativos</h3>
+        <div class="value" id="pat-ativos-v">R$ 0,00</div>
+      </div>
+      <div class="card">
+        <h3>Passivos</h3>
+        <div class="value red" id="pat-passivos-v">R$ 0,00</div>
+      </div>
+      <div class="card">
+        <h3>Patrimonio liquido</h3>
+        <div class="value" id="pat-liquido">R$ 0,00</div>
+        <div class="muted" id="pat-info"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+const usuarioLogado = localStorage.getItem("usuarioLogado");
+if(!usuarioLogado){ window.location.href = "INDEX.html"; }
+document.getElementById("usuario").innerText = usuarioLogado;
+const key = `financas_${usuarioLogado}`;
+const categoriasPadrao = [
+  {nome:"Geral", teto:0, fixa:true},{nome:"Alimentacao", teto:0, fixa:true},{nome:"Moradia", teto:0, fixa:true},
+  {nome:"Transporte", teto:0, fixa:true},{nome:"Saude", teto:0, fixa:true},{nome:"Educacao", teto:0, fixa:true},
+  {nome:"Lazer", teto:0, fixa:true},{nome:"Contas", teto:0, fixa:true},{nome:"Investimentos", teto:0, fixa:true},{nome:"Outros", teto:0, fixa:true}
+];
+const estado = carregarEstado();
+function carregarEstado(){
+  const base = JSON.parse(localStorage.getItem(key) || JSON.stringify({
+    lancamentos:[], cartoes:[], dividas:[], assinaturas:[], patrimonio:{ativos:0,passivos:0}, categorias:categoriasPadrao
+  }));
+  base.categorias = normalizarCategorias(base.categorias || []);
+  base.lancamentos = (base.lancamentos || []).map(normalizarLancamento);
+  base.cartoes = base.cartoes || [];
+  base.dividas = base.dividas || [];
+  base.assinaturas = base.assinaturas || [];
+  base.patrimonio = base.patrimonio || {ativos:0,passivos:0};
+  return base;
+}
+function salvarEstado(){ localStorage.setItem(key, JSON.stringify(estado)); }
+function normalizarCategorias(lista){ const nomes=new Set(); const ajustadas=[]; [...categoriasPadrao,...lista].forEach(c=>{ if(!c||!c.nome) return; const lower=c.nome.toLowerCase(); if(nomes.has(lower)) return; nomes.add(lower); ajustadas.push({nome:c.nome,teto:parseFloat(c.teto)||0,fixa:!!c.fixa}); }); return ajustadas; }
+function normalizarLancamento(l){ const recorrencia=l.recorrencia||(l.natureza==="fixa"?"fixa":"avulsa"); const variavel=l.variavel ?? (l.Variavel ?? (l.natureza==="variavel")); const valorPrevisto=typeof l.valorPrevisto==="number"?l.valorPrevisto:(typeof l.valor==="number"?l.valor:0); const valorPago=typeof l.valorPago==="number"?l.valorPago:(variavel?null:valorPrevisto); return {id:l.id||crypto.randomUUID(), desc:l.desc||l.descricao||"", data:l.data, tipo:l.tipo||"despesa", recorrencia, variavel:!!variavel, valorPrevisto, valorPago, categoria:l.categoria||"Geral", forma:l.forma||"N/D"}; }
+const valorEfetivo = l => (typeof l.valorPago==="number" ? l.valorPago : (l.valorPrevisto||0));
+const hojeStr = ()=> new Date().toISOString().split("T")[0];
+const mesKey = d => d.slice(0,7);
+const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const fmtValor = v => (v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+function entraNoMes(l, alvo){ const mesLanc=mesKey(l.data); return l.recorrencia==="fixa" ? mesLanc<=alvo : mesLanc===alvo; }
+function scrollToForm(){ document.getElementById("lancamentos").scrollIntoView({behavior:"smooth"}); }
+function setFeedback(el,msg,type=""){ el.innerText=msg; el.className="feedback"+(type?" "+type:""); }
+
+document.querySelectorAll(".nav button").forEach(btn=>{ btn.onclick=()=>{ document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); const alvo=btn.dataset.section; document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active")); document.getElementById(alvo).classList.add("active"); document.getElementById("titulo-pagina").innerText=btn.innerText; }; });
+
+// Lancamentos
+ document.getElementById("data").value = hojeStr();
+const tipoSelect = document.getElementById("tipo");
+tipoSelect.addEventListener("change", ()=>{ const variavelSel=document.getElementById("variavel"); if(tipoSelect.value==="receita"){variavelSel.value="nao";variavelSel.disabled=true;} else {variavelSel.disabled=false;} }); tipoSelect.dispatchEvent(new Event("change"));
+function adicionarLancamento(){
+  const desc=document.getElementById("descricao").value.trim(); const data=document.getElementById("data").value; const tipo=document.getElementById("tipo").value;
+  const recorrencia=document.getElementById("recorrencia").value; const variavel=tipo==="despesa" && document.getElementById("variavel").value==="sim";
+  const categoria=document.getElementById("categoria").value||"Geral"; const valorPrevisto=parseFloat(document.getElementById("valor-previsto").value);
+  const valorPagoInput=parseFloat(document.getElementById("valor-pago").value); const valorPago=isNaN(valorPagoInput)?(variavel?null:valorPrevisto):valorPagoInput;
+  const forma=document.getElementById("forma").value.trim()||"N/D"; const fb=document.getElementById("feedback-lanc");
+  if(!desc||!data||isNaN(valorPrevisto)||valorPrevisto<=0){ setFeedback(fb,"Preencha descricao, data e valor previsto valido.","error"); return; }
+  estado.lancamentos.push({id:crypto.randomUUID(), desc, data, tipo, recorrencia, variavel, valorPrevisto, valorPago, categoria, forma}); salvarEstado(); setFeedback(fb,"Lancamento salvo.","success");
+  ["descricao","valor-previsto","valor-pago","forma"].forEach(id=>document.getElementById(id).value=""); document.getElementById("categoria").selectedIndex=0; document.getElementById("tipo").value="receita"; document.getElementById("recorrencia").value="fixa"; document.getElementById("variavel").value="nao"; tipoSelect.dispatchEvent(new Event("change")); renderizarTudo();
+}
+function removerLanc(id){ estado.lancamentos = estado.lancamentos.filter(l=>l.id!==id); salvarEstado(); renderizarTudo(); }
+function registrarPagamento(id){ const l=estado.lancamentos.find(x=>x.id===id); if(!l) return; const valorStr=prompt(`Valor pago para ${l.desc}`, l.valorPrevisto||""); if(valorStr===null) return; const pago=parseFloat(valorStr); if(isNaN(pago)||pago<=0){alert("Valor invalido.");return;} l.valorPago=pago; salvarEstado(); renderizarTudo(); }
+function filtrarLancamentos(lista){ const periodo=document.getElementById("filtro-mes").value; const tipo=document.getElementById("filtro-tipo").value; const busca=document.getElementById("busca").value.toLowerCase(); const hoje=new Date(); const mesAtualKey=mesKey(hojeStr()); return lista.filter(l=>{ const d=new Date(l.data+"T00:00:00"); let okPeriodo=true; if(periodo==="mes"){okPeriodo=entraNoMes(l,mesAtualKey);} else if(periodo==="30"){okPeriodo=l.recorrencia==="fixa"? mesAtualKey>=mesKey(l.data):(hoje-d)/(1000*60*60*24)<=30;} const okTipo=tipo==="todos"?true:l.tipo===tipo; const okBusca=!busca || l.desc.toLowerCase().includes(busca) || l.categoria.toLowerCase().includes(busca); return okPeriodo && okTipo && okBusca; }).sort((a,b)=> new Date(b.data) - new Date(a.data)); }
+function renderizarLancamentos(){ const corpo=document.getElementById("lista-lanc"); const vazio=document.getElementById("vazio-lanc"); const lista=filtrarLancamentos(estado.lancamentos); corpo.innerHTML=""; if(!lista.length){vazio.style.display="block";return;} vazio.style.display="none"; lista.forEach(l=>{ const pago=typeof l.valorPago==='number'; const tr=document.createElement("tr"); tr.innerHTML = `
+      <td>${new Date(l.data+"T00:00:00").toLocaleDateString("pt-BR")}</td>
+      <td>${l.desc}</td>
+      <td>${l.categoria}</td>
+      <td><span class="chip ${l.tipo==='receita'?'in':'out'}">${l.tipo==='receita'?'Receita':'Despesa'}</span></td>
+      <td><span class="chip ${l.recorrencia==='fixa'?'rec':'avu'}">${l.recorrencia==='fixa'?'Recorrente':'Avulsa'}</span></td>
+      <td><span class="chip ${l.variavel?'var':'pago'}">${l.variavel?'Variavel':'Valor fixo'}</span></td>
+      <td>${fmtValor(l.valorPrevisto)}</td>
+      <td>${pago?fmtValor(l.valorPago):'Pendente'}</td>
+      <td>${l.forma}</td>
+      <td>${l.variavel && !pago ? `<button class="action" onclick="registrarPagamento('${l.id}')">Registrar pagamento</button>` : ''}<button class="action" onclick="removerLanc('${l.id}')">Excluir</button></td>`; corpo.appendChild(tr); }); }
+
+function gastoCategoriaMes(nome, mesRef){ const alvo=mesRef||mesKey(hojeStr()); return estado.lancamentos.filter(l=> l.tipo==="despesa" && l.categoria===nome && entraNoMes(l, alvo)).reduce((s,l)=> s + valorEfetivo(l), 0); }
+function statusTeto(cat,gasto){ if(!cat.teto||cat.teto<=0) return {texto:"Sem teto",classe:"muted"}; const perc=gasto/cat.teto; if(perc>=1) return {texto:"Estourou o teto",classe:"teto-estouro"}; if(perc>=0.9) return {texto:`${(perc*100).toFixed(0)}% do teto`,classe:"teto-alerta"}; return {texto:`${(perc*100).toFixed(0)}% usado`,classe:"teto-ok"}; }
+function dadosTetos(){ const mesRef=mesKey(hojeStr()); return estado.categorias.map(cat=>{ const gasto=gastoCategoriaMes(cat.nome, mesRef); const status=statusTeto(cat, gasto); return {...cat, gasto, status}; }).sort((a,b)=> b.gasto - a.gasto); }
+function preencherSelectCategorias(){ const sel=document.getElementById("categoria"); if(!sel) return; const atual=sel.value; sel.innerHTML=""; dadosTetos().forEach(cat=>{ const opt=document.createElement("option"); opt.value=cat.nome; opt.textContent=cat.nome; if(cat.nome===atual) opt.selected=true; sel.appendChild(opt); }); if(sel.selectedIndex===-1 && sel.options.length){ sel.selectedIndex=0; } }
+function renderizarCategorias(){ preencherSelectCategorias(); const corpo=document.getElementById("lista-categorias"); if(!corpo) return; corpo.innerHTML=""; dadosTetos().forEach(cat=>{ const tr=document.createElement("tr"); tr.innerHTML=`
+      <td>${cat.nome}${cat.fixa ? ' (padrao)' : ''}</td>
+      <td>${cat.teto>0?fmtValor(cat.teto):'--'}</td>
+      <td>${fmtValor(cat.gasto)}</td>
+      <td class="${cat.status.classe}">${cat.status.texto}</td>
+      <td><button class="action" onclick="atualizarTeto('${cat.nome}')">Definir teto</button>${cat.fixa?'':` <button class="action" onclick="removerCategoria('${cat.nome}')">Remover</button>`}</td>`; corpo.appendChild(tr); }); }
+function renderizarTetosDashboard(){ const corpo=document.getElementById("tabela-tetos"); if(!corpo) return; corpo.innerHTML=""; dadosTetos().forEach(cat=>{ const tr=document.createElement("tr"); tr.innerHTML=`
+      <td>${cat.nome}</td>
+      <td>${cat.teto>0?fmtValor(cat.teto):'--'}</td>
+      <td>${fmtValor(cat.gasto)}</td>
+      <td class="${cat.status.classe}">${cat.status.texto}</td>`; corpo.appendChild(tr); }); }
+function adicionarCategoria(){ const nome=document.getElementById("nova-cat").value.trim(); const teto=parseFloat(document.getElementById("teto-cat").value)||0; if(!nome){return;} const existe=estado.categorias.find(c=>c.nome.toLowerCase()===nome.toLowerCase()); if(existe){existe.teto=teto;} else {estado.categorias.push({nome,teto,fixa:false});} document.getElementById("nova-cat").value=""; document.getElementById("teto-cat").value=""; salvarEstado(); renderizarCategorias(); renderizarTetosDashboard(); }
+function atualizarTeto(nome){ const cat=estado.categorias.find(c=>c.nome===nome); if(!cat) return; const novo=prompt(`Definir teto para ${nome}`, cat.teto || ""); if(novo===null) return; cat.teto=parseFloat(novo)||0; salvarEstado(); renderizarCategorias(); renderizarTetosDashboard(); }
+function removerCategoria(nome){ estado.categorias = estado.categorias.filter(c=> !(c.nome===nome && !c.fixa)); salvarEstado(); renderizarCategorias(); renderizarTetosDashboard(); }
+
+// Cartoes
+ document.getElementById("cartao-data").value = hojeStr();
+function adicionarCartao(){ const nome=document.getElementById("cartao-nome").value.trim(); const desc=document.getElementById("cartao-desc").value.trim(); const data=document.getElementById("cartao-data").value; const valor=parseFloat(document.getElementById("cartao-valor").value); const parcelas=parseInt(document.getElementById("cartao-parcelas").value,10); const fb=document.getElementById("feedback-cartao"); if(!nome||!desc||!data||!valor||valor<=0||!parcelas||parcelas<1){ setFeedback(fb,"Preencha cartao, descricao, data, valor e parcelas.","error");return; } const valorParcela=+(valor/parcelas).toFixed(2); const compra={id:crypto.randomUUID(), nome, desc, data, valor, parcelas, valorParcela}; estado.cartoes.push(compra); salvarEstado(); setFeedback(fb,"Compra registrada e parcelas distribuidas.","success"); ["cartao-nome","cartao-desc","cartao-valor"].forEach(id=>document.getElementById(id).value=""); document.getElementById("cartao-parcelas").value="1"; renderizarCartoes(); renderizarPlanejamento(); }
+function removerCartao(id){ estado.cartoes = estado.cartoes.filter(c=>c.id!==id); salvarEstado(); renderizarCartoes(); renderizarPlanejamento(); }
+function gerarParcelasCartao(c){ const parcelas=[]; const inicio=new Date(c.data+"T00:00:00"); for(let i=0;i<c.parcelas;i++){ const d=new Date(inicio); d.setMonth(d.getMonth()+i); parcelas.push({mes:mesKey(d.toISOString()), numero:i+1, valor:c.valorParcela, desc:c.desc, nome:c.nome, id:c.id}); } return parcelas; }
+function renderizarCartoes(){ const corpo=document.getElementById("lista-cartao"); const vazio=document.getElementById("vazio-cartao"); corpo.innerHTML=""; let todas=[]; estado.cartoes.forEach(c=> todas=todas.concat(gerarParcelasCartao(c))); todas.sort((a,b)=> a.mes.localeCompare(b.mes)); if(!todas.length){vazio.style.display="block";return;} vazio.style.display="none"; todas.forEach(p=>{ const tr=document.createElement("tr"); tr.innerHTML=`
+      <td>${p.nome}</td>
+      <td>${p.desc}</td>
+      <td>${p.numero}/${estado.cartoes.find(c=>c.id===p.id)?.parcelas}</td>
+      <td>${p.mes}</td>
+      <td>${fmtValor(p.valor)}</td>
+      <td><button class="action" onclick="removerCartao('${p.id}')">Excluir compra</button></td>`; corpo.appendChild(tr); }); }
+
+// Dividas
+ document.getElementById("divida-data").value = hojeStr();
+function adicionarDivida(){ const nome=document.getElementById("divida-nome").value.trim(); const valor=parseFloat(document.getElementById("divida-valor").value); const juros=parseFloat(document.getElementById("divida-juros").value)||0; const parcelas=parseInt(document.getElementById("divida-parcelas").value,10); const data=document.getElementById("divida-data").value; const fb=document.getElementById("feedback-divida"); if(!nome||!valor||valor<=0||!parcelas||parcelas<1||!data){ setFeedback(fb,"Preencha nome, valor, parcelas e inicio.","error");return; } const valorParcela=+(valor/parcelas).toFixed(2); const divida={id:crypto.randomUUID(), nome, valor, juros, parcelas, data, valorParcela}; estado.dividas.push(divida); salvarEstado(); setFeedback(fb,"Divida cadastrada.","success"); ["divida-nome","divida-valor","divida-juros"].forEach(id=>document.getElementById(id).value=""); document.getElementById("divida-parcelas").value="1"; renderizarDividas(); renderizarPlanejamento(); }
+function removerDivida(id){ estado.dividas = estado.dividas.filter(d=>d.id!==id); salvarEstado(); renderizarDividas(); renderizarPlanejamento(); }
+function gerarParcelasDivida(d){ const parcelas=[]; const inicio=new Date(d.data+"T00:00:00"); for(let i=0;i<d.parcelas;i++){ const dt=new Date(inicio); dt.setMonth(dt.getMonth()+i); const valor=+(d.valorParcela * (1 + d.juros/100)).toFixed(2); parcelas.push({mes:mesKey(dt.toISOString()), numero:i+1, valor, nome:d.nome, id:d.id}); } return parcelas; }
+function renderizarDividas(){ const corpo=document.getElementById("lista-dividas"); const vazio=document.getElementById("vazio-dividas"); corpo.innerHTML=""; let linhas=[]; estado.dividas.forEach(d=> linhas=linhas.concat(gerarParcelasDivida(d))); linhas.sort((a,b)=> a.mes.localeCompare(b.mes)); if(!linhas.length){vazio.style.display="block";return;} vazio.style.display="none"; linhas.forEach(p=>{ const totalParcelas=estado.dividas.find(d=>d.id===p.id)?.parcelas; const tr=document.createElement("tr"); tr.innerHTML=`
+      <td>${p.nome}</td>
+      <td>${p.numero}/${totalParcelas}</td>
+      <td>${p.mes}</td>
+      <td>${fmtValor(p.valor)}</td>
+      <td><button class="action" onclick="removerDivida('${p.id}')">Excluir divida</button></td>`; corpo.appendChild(tr); }); }
+
+// Assinaturas
+function adicionarAssinatura(){ const nome=document.getElementById("ass-nome").value.trim(); const categoria=document.getElementById("ass-cat").value.trim()||"Assinatura"; const valor=parseFloat(document.getElementById("ass-valor").value); const dia=parseInt(document.getElementById("ass-dia").value,10); const forma=document.getElementById("ass-forma").value.trim()||"Cartao"; const status=document.getElementById("ass-status").value; const fb=document.getElementById("feedback-ass"); if(!nome||!valor||valor<=0||!dia){ setFeedback(fb,"Preencha nome, valor e dia de cobranca.","error");return; } estado.assinaturas.push({id:crypto.randomUUID(), nome, categoria, valor, dia, forma, status}); salvarEstado(); setFeedback(fb,"Assinatura salva.","success"); ["ass-nome","ass-cat","ass-valor","ass-dia","ass-forma"].forEach(id=>document.getElementById(id).value=""); document.getElementById("ass-status").value="ativa"; renderizarAssinaturas(); renderizarPlanejamento(); }
+function removerAssinatura(id){ estado.assinaturas = estado.assinaturas.filter(a=>a.id!==id); salvarEstado(); renderizarAssinaturas(); renderizarPlanejamento(); }
+function renderizarAssinaturas(){ const corpo=document.getElementById("lista-ass"); const vazio=document.getElementById("vazio-ass"); corpo.innerHTML=""; if(!estado.assinaturas.length){vazio.style.display="block";return;} vazio.style.display="none"; estado.assinaturas.forEach(a=>{ const tr=document.createElement("tr"); tr.innerHTML=`
+      <td>${a.nome}</td>
+      <td>${a.categoria}</td>
+      <td>${fmtValor(a.valor)}</td>
+      <td>${a.dia}</td>
+      <td>${a.status}</td>
+      <td><button class="action" onclick="removerAssinatura('${a.id}')">Excluir</button></td>`; corpo.appendChild(tr); }); }
+
+// Patrimonio
+function salvarPatrimonio(){ const ativos=parseFloat(document.getElementById("pat-ativos").value)||0; const passivos=parseFloat(document.getElementById("pat-passivos").value)||0; estado.patrimonio={ativos,passivos}; salvarEstado(); setFeedback(document.getElementById("feedback-pat"),"Patrimonio atualizado.","success"); renderizarPatrimonio(); }
+function renderizarPatrimonio(){ const {ativos,passivos}=estado.patrimonio; document.getElementById("pat-ativos").value=ativos; document.getElementById("pat-passivos").value=passivos; document.getElementById("pat-ativos-v").innerText=fmtValor(ativos); document.getElementById("pat-passivos-v").innerText=fmtValor(passivos); const liquido=ativos-passivos; document.getElementById("pat-liquido").innerText=fmtValor(liquido); document.getElementById("pat-info").innerText=liquido>=0?"Voce esta no positivo.":"Atencao: patrimonio negativo."; }
+
+// Projecao
+function projetarAno(){ const ano=new Date().getFullYear(); const mesesProj=Array.from({length:12},(_,i)=>({mes:i,receitas:0,despesas:0,cartao:0,dividas:0,assinaturas:0})); estado.lancamentos.forEach(l=>{ const d=new Date(l.data+"T00:00:00"); const baseMes=d.getMonth(); const baseAno=d.getFullYear(); const campo=l.tipo==="receita"?"receitas":"despesas"; const valor=valorEfetivo(l); if(l.recorrencia==="fixa"){ for(let m=0;m<12;m++){ if(baseAno<ano || (baseAno===ano && baseMes<=m)){ mesesProj[m][campo]+=valor; } } } else if(baseAno===ano){ mesesProj[baseMes][campo]+=valor; } }); estado.cartoes.forEach(c=>{ gerarParcelasCartao(c).forEach(p=>{ const [y,m]=p.mes.split("-").map(Number); if(y===ano) mesesProj[m-1].cartao += p.valor; }); }); estado.dividas.forEach(d=>{ gerarParcelasDivida(d).forEach(p=>{ const [y,m]=p.mes.split("-").map(Number); if(y===ano) mesesProj[m-1].dividas += p.valor; }); }); estado.assinaturas.filter(a=>a.status==="ativa").forEach(a=>{ for(let m=0;m<12;m++){ mesesProj[m].assinaturas += a.valor; } }); mesesProj.forEach(m=>{ m.saldo = m.receitas - (m.despesas + m.cartao + m.dividas + m.assinaturas); }); return mesesProj; }
+
+function renderizarDashboard(){ const hoje=new Date(); const mesAtual=hoje.getMonth(); const proj=projetarAno(); const mes=proj[mesAtual]; document.getElementById("dash-receitas").innerText=fmtValor(mes.receitas); document.getElementById("dash-despesas").innerText=fmtValor(mes.despesas + mes.cartao + mes.dividas + mes.assinaturas); document.getElementById("dash-saldo").innerText=fmtValor(mes.saldo); document.getElementById("dash-recorrentes").innerText=fmtValor(totalPorRecorrencia("fixa")); document.getElementById("dash-avulsos").innerText=`Avulsos: ${fmtValor(totalPorRecorrencia("avulsa"))}`; document.getElementById("dash-receitas-info").innerText="Inclui receitas recorrentes."; document.getElementById("dash-despesas-info").innerText="Considera valores pagos ou previstos quando pendentes."; document.getElementById("dash-saldo-info").innerText=mes.saldo>=0?"Mes positivo.":"Mes no negativo."; renderizarTetosDashboard(); }
+function totalPorRecorrencia(rec){ return estado.lancamentos.filter(l=>l.recorrencia===rec && l.tipo==="despesa").reduce((s,l)=>s+valorEfetivo(l),0); }
+function renderizarPlanejamento(){ const proj=projetarAno(); const corpo=document.getElementById("tabela-planejamento"); const corpoAno=document.getElementById("tabela-planejamento-ano"); [corpo,corpoAno].forEach(c=> c.innerHTML=""); proj.forEach(m=>{ const tr=document.createElement("tr"); tr.innerHTML=`
+      <td><span class="badge-month">${meses[m.mes]}</span></td>
+      <td>${fmtValor(m.receitas)}</td>
+      <td>${fmtValor(m.despesas)}</td>
+      <td>${fmtValor(m.cartao)}</td>
+      <td>${fmtValor(m.dividas)}</td>
+      <td>${fmtValor(m.assinaturas)}</td>
+      <td class="${m.saldo>=0?'alert-positive':'alert-negative'}">${fmtValor(m.saldo)}</td>`; corpo.appendChild(tr.cloneNode(true)); corpoAno.appendChild(tr); }); }
+
+function renderizarTudo(){ renderizarCategorias(); renderizarLancamentos(); renderizarCartoes(); renderizarDividas(); renderizarAssinaturas(); renderizarPatrimonio(); renderizarPlanejamento(); renderizarDashboard(); }
+function sair(){ localStorage.removeItem("usuarioLogado"); window.location.href = "INDEX.html"; }
+renderizarTudo();
+</script>
+</body>
+</html>
