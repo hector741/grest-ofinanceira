@@ -2,10 +2,13 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Acesso - Gestão Financeira</title>
+<title>Acesso - GestÆo Financeira</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <style>
 *{
@@ -201,13 +204,13 @@ button:active{
     <div class="logo">
       <div class="badge">GF</div>
       <div class="text">
-        <span class="title">Gestão Financeira</span>
-        <span class="subtitle">Controle em um só lugar</span>
+        <span class="title">GestÆo Financeira</span>
+        <span class="subtitle">Controle em um s¢ lugar</span>
       </div>
     </div>
 
     <h2 id="titulo">Login</h2>
-    <div class="subtitle-block" id="subtitulo">Acesse para acompanhar suas entradas e saídas.</div>
+    <div class="subtitle-block" id="subtitulo">Acesse para acompanhar suas entradas e sa¡das.</div>
 
     <div class="form-group">
       <label for="email">E-mail</label>
@@ -215,13 +218,13 @@ button:active{
     </div>
     <div class="form-group">
       <label for="senha">Senha</label>
-      <input type="password" id="senha" placeholder="••••••••">
+      <input type="password" id="senha" placeholder="********">
     </div>
 
     <button type="button" onclick="acao()">Entrar</button>
 
     <div class="switch">
-      <div id="texto-switch">Não tem conta? Crie agora</div>
+      <div id="texto-switch">NÆo tem conta? Crie agora</div>
       <button type="button" onclick="alternar()">Alternar</button>
     </div>
 
@@ -230,11 +233,24 @@ button:active{
 </div>
 
 <script>
+// Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDdFbFNylaD-VvB4BvGDUUvIWK3-0Od-gI",
+  authDomain: "login-e-dados.firebaseapp.com",
+  projectId: "login-e-dados",
+  storageBucket: "login-e-dados.firebasestorage.app",
+  messagingSenderId: "1011578048570",
+  appId: "1:1011578048570:web:b6fa30b752623afad2e503",
+  measurementId: "G-SVC9YSKDLC"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
 let modo = "login"; // login | registro
 
 function alternar(){
   const titulo = document.getElementById("titulo");
-  const botao = document.querySelector("button");
+  const botao = document.querySelector(".card > button");
   const texto = document.getElementById("texto-switch");
   const subtitulo = document.getElementById("subtitulo");
   document.getElementById("erro").innerText = "";
@@ -243,27 +259,19 @@ function alternar(){
     modo = "registro";
     titulo.innerText = "Criar Conta";
     botao.innerText = "Registrar";
-    texto.innerText = "Já tem conta? Faça login";
-    subtitulo.innerText = "Abra sua conta e comece a organizar seus números.";
+    texto.innerText = "J  tem conta? Fa‡a login";
+    subtitulo.innerText = "Abra sua conta e comece a organizar seus n£meros.";
   }else{
     modo = "login";
     titulo.innerText = "Login";
     botao.innerText = "Entrar";
-    texto.innerText = "Não tem conta? Crie agora";
-    subtitulo.innerText = "Acesse para acompanhar suas entradas e saídas.";
+    texto.innerText = "NÆo tem conta? Crie agora";
+    subtitulo.innerText = "Acesse para acompanhar suas entradas e sa¡das.";
   }
 }
 
 function acao(){
   modo === "login" ? login() : registrar();
-}
-
-function obterUsuarios(){
-  return JSON.parse(localStorage.getItem("usuarios") || "[]");
-}
-
-function salvarUsuarios(usuarios){
-  localStorage.setItem("usuarios", JSON.stringify(usuarios));
 }
 
 function validarCampos(email, senha){
@@ -283,18 +291,16 @@ function registrar(){
 
   if(!validarCampos(email, senha)) return;
 
-  const usuarios = obterUsuarios();
-
-  if(usuarios.find(u => u.email === email)){
-    erro.innerText = "Este e-mail já está cadastrado.";
-    return;
-  }
-
-  usuarios.push({ email, senha });
-  salvarUsuarios(usuarios);
-
-  localStorage.setItem("usuarioLogado", email);
-  window.location.href = "app.html";
+  auth.createUserWithEmailAndPassword(email, senha)
+    .then(()=> window.location.href = "app.html")
+    .catch(e=>{
+      const map = {
+        "auth/email-already-in-use": "Este e-mail ja esta cadastrado.",
+        "auth/invalid-email": "E-mail invalido.",
+        "auth/weak-password": "Senha fraca. Use pelo menos 6 caracteres."
+      };
+      erro.innerText = map[e.code] || ("Erro ao registrar: " + (e.message || e.code));
+    });
 }
 
 function login(){
@@ -304,22 +310,24 @@ function login(){
 
   if(!validarCampos(email, senha)) return;
 
-  const usuarios = obterUsuarios();
-  const usuario = usuarios.find(
-    u => u.email === email && u.senha === senha
-  );
-
-  if(!usuario){
-    erro.innerText = "E-mail ou senha inválidos.";
-    return;
-  }
-
-  localStorage.setItem("usuarioLogado", email);
-  window.location.href = "app.html";
+  auth.signInWithEmailAndPassword(email, senha)
+    .then(()=> window.location.href = "app.html")
+    .catch(e=>{
+      const map = {
+        "auth/user-not-found": "E-mail ou senha invalidos.",
+        "auth/wrong-password": "E-mail ou senha invalidos.",
+        "auth/invalid-credential": "E-mail ou senha invalidos.",
+        "auth/invalid-email": "E-mail invalido."
+      };
+      erro.innerText = map[e.code] || ("Erro ao entrar: " + (e.message || e.code));
+    });
 }
+
+auth.onAuthStateChanged((user)=>{
+  if(user){ window.location.href = "app.html"; }
+});
 </script>
 
 </body>
 </html>
-
 

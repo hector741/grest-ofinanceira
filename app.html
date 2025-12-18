@@ -6,6 +6,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;}
 :root{
@@ -91,11 +94,10 @@ input:focus, select:focus{outline:none;border-color:rgba(37,99,235,0.7);box-shad
   <div class="nav">
     <button class="active" data-section="dashboard">Dashboard</button>
     <button data-section="lancamentos">Lancamentos</button>
-    <button data-section="planejamento">Planejamento</button>
     <button data-section="cartoes">Cartoes</button>
     <button data-section="dividas">Dividas</button>
     <button data-section="assinaturas">Assinaturas</button>
-    <button data-section="patrimonio">Patrimonio</button>
+    <button data-section="investimentos">Investimentos</button>
   </div>
   <div class="footer">
     <div class="user-pill">
@@ -246,28 +248,28 @@ input:focus, select:focus{outline:none;border-color:rgba(37,99,235,0.7);box-shad
     </div>
   </section>
 
-  <!-- Planejamento -->
-  <section id="planejamento" class="section">
-    <div class="panel">
-      <h4>Planejamento mensal e anual</h4>
-      <div class="muted" style="margin-bottom:10px;">Simulacao automatica combinando fixos, variaveis, cartoes, dividas e assinaturas.</div>
-      <div class="table-scroll">
-        <table class="table">
-          <thead>
-            <tr><th>Mes</th><th>Receitas</th><th>Despesas</th><th>Cartao</th><th>Dividas</th><th>Assinaturas</th><th>Saldo</th></tr>
-          </thead>
-          <tbody id="tabela-planejamento"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
   <!-- Cartoes -->
   <section id="cartoes" class="section">
     <div class="panel">
+      <h4>Meus cartoes</h4>
+      <div class="form-row">
+        <div><label for="cartao-salvar-nome">Nome do cartao</label><input id="cartao-salvar-nome" placeholder="Ex: C6 Bank"></div>
+        <div style="align-self:end;"><button class="btn-secondary" onclick="adicionarCartaoSalvo()">Salvar cartao</button></div>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Cartao</th><th></th></tr></thead>
+          <tbody id="lista-cartoes-salvos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
       <h4>Cadastro de compras no cartao</h4>
       <div class="form-row">
-        <div><label for="cartao-nome">Cartao</label><input id="cartao-nome" placeholder="Visa, Mastercard..."></div>
+        <div><label for="cartao-select">Cartao</label>
+          <select id="cartao-select"></select>
+        </div>
         <div><label for="cartao-desc">Descricao</label><input id="cartao-desc" placeholder="Ex: Notebook"></div>
         <div><label for="cartao-data">Data da compra</label><input type="date" id="cartao-data"></div>
         <div><label for="cartao-valor">Valor total</label><input type="number" step="0.01" min="0" id="cartao-valor"></div>
@@ -306,9 +308,25 @@ input:focus, select:focus{outline:none;border-color:rgba(37,99,235,0.7);box-shad
 
     <div class="panel">
       <h4>Impacto mensal</h4>
+      <div class="form-row" style="margin-bottom:10px;">
+        <div><label for="filtro-divida-status">Status</label>
+          <select id="filtro-divida-status" onchange="renderizarDividas()">
+            <option value="todas">Todas</option>
+            <option value="pendente">Pendentes</option>
+            <option value="pago">Pagas</option>
+            <option value="quitada">Quitadas</option>
+          </select>
+        </div>
+        <div><label for="filtro-divida-mes">Mes</label>
+          <select id="filtro-divida-mes" onchange="renderizarDividas()">
+            <option value="todas">Todos</option>
+          </select>
+        </div>
+        <div><label for="busca-divida">Buscar</label><input id="busca-divida" placeholder="Nome ou mes" oninput="renderizarDividas()"></div>
+      </div>
       <div class="table-scroll">
         <table class="table">
-          <thead><tr><th>Nome</th><th>Parcela</th><th>Mes</th><th>Valor</th><th></th></tr></thead>
+          <thead><tr><th>Nome</th><th>Parcela</th><th>Mes</th><th>Valor</th><th>Status</th><th></th></tr></thead>
           <tbody id="lista-dividas"></tbody>
         </table>
       </div>
@@ -349,58 +367,120 @@ input:focus, select:focus{outline:none;border-color:rgba(37,99,235,0.7);box-shad
     </div>
   </section>
 
-  <!-- Patrimonio -->
-  <section id="patrimonio" class="section">
+  <!-- Investimentos -->
+  <section id="investimentos" class="section">
     <div class="panel">
-      <h4>Patrimonio liquido</h4>
+      <h4>Simulacao de investimentos</h4>
       <div class="form-row">
-        <div><label for="pat-ativos">Ativos (investimentos, saldo)</label><input type="number" step="0.01" min="0" id="pat-ativos"></div>
-        <div><label for="pat-passivos">Passivos (dividas)</label><input type="number" step="0.01" min="0" id="pat-passivos"></div>
+        <div><label for="invest-tipo">Tipo</label>
+          <select id="invest-tipo">
+            <option value="cdb">CDB</option>
+            <option value="lc">LC</option>
+            <option value="titulos">Titulos publicos</option>
+            <option value="debentures">Debentures</option>
+            <option value="lci_lca">LCI/LCA</option>
+            <option value="tesouro">Tesouro</option>
+          </select>
+        </div>
+        <div><label for="invest-indexador">Indexador</label>
+          <select id="invest-indexador">
+            <option value="pre">Pre</option>
+            <option value="pos">Pos (CDI)</option>
+            <option value="ipca">IPCA +</option>
+          </select>
+        </div>
+        <div><label for="invest-inicial">Investimento inicial</label><input type="number" min="0" step="0.01" id="invest-inicial" value="0"></div>
+        <div><label for="invest-mensal">Investimento mensal</label><input type="number" min="0" step="0.01" id="invest-mensal" value="0"></div>
+        <div><label for="invest-prazo">Prazo</label><input type="number" min="1" id="invest-prazo" value="12"></div>
+        <div><label for="invest-prazo-tipo">Unidade do prazo</label>
+          <select id="invest-prazo-tipo">
+            <option value="meses">Meses</option>
+            <option value="anos">Anos</option>
+          </select>
+        </div>
+        <div><label for="invest-rentab">Rentabilidade (%)</label><input type="number" step="0.01" id="invest-rentab" value="12"></div>
+        <div><label for="invest-rentab-tipo">Periodo da taxa</label>
+          <select id="invest-rentab-tipo">
+            <option value="anual">Anual</option>
+            <option value="mensal">Mensal</option>
+          </select>
+        </div>
       </div>
-      <button class="btn-primary" onclick="salvarPatrimonio()">Atualizar patrimonio</button>
-      <div class="feedback" id="feedback-pat"></div>
+      <div class="muted" style="margin:6px 0 2px;">Calculamos com juros compostos mensais e IR regressivo quando aplicavel.</div>
+      <button class="btn-primary" onclick="simularInvestimento()">Simular</button>
+      <div class="feedback" id="invest-feedback"></div>
     </div>
-    <div class="grid cards">
-      <div class="card">
-        <h3>Ativos</h3>
-        <div class="value" id="pat-ativos-v">R$ 0,00</div>
-      </div>
-      <div class="card">
-        <h3>Passivos</h3>
-        <div class="value red" id="pat-passivos-v">R$ 0,00</div>
-      </div>
-      <div class="card">
-        <h3>Patrimonio liquido</h3>
-        <div class="value" id="pat-liquido">R$ 0,00</div>
-        <div class="muted" id="pat-info"></div>
-      </div>
-    </div>
+
+    <div class="panel" id="invest-resultado" style="display:none;"></div>
   </section>
 </main>
 <script>
-const usuarioLogado = localStorage.getItem("usuarioLogado");
-if(!usuarioLogado){ window.location.href = "INDEX.html"; }
-document.getElementById("usuario").innerText = usuarioLogado;
-const key = `financas_${usuarioLogado}`;
+// Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDdFbFNylaD-VvB4BvGDUUvIWK3-0Od-gI",
+  authDomain: "login-e-dados.firebaseapp.com",
+  projectId: "login-e-dados",
+  storageBucket: "login-e-dados.firebasestorage.app",
+  messagingSenderId: "1011578048570",
+  appId: "1:1011578048570:web:b6fa30b752623afad2e503",
+  measurementId: "G-SVC9YSKDLC"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let usuarioAtual = null;
+let key = null; // cache local por uid
+let estado = null;
+let salvarRemotoTimeout = null;
 const categoriasPadrao = [
   {nome:"Geral", teto:0, fixa:true},{nome:"Alimentacao", teto:0, fixa:true},{nome:"Moradia", teto:0, fixa:true},
   {nome:"Transporte", teto:0, fixa:true},{nome:"Saude", teto:0, fixa:true},{nome:"Educacao", teto:0, fixa:true},
   {nome:"Lazer", teto:0, fixa:true},{nome:"Contas", teto:0, fixa:true},{nome:"Investimentos", teto:0, fixa:true},{nome:"Outros", teto:0, fixa:true}
 ];
-const estado = carregarEstado();
-function carregarEstado(){
-  const base = JSON.parse(localStorage.getItem(key) || JSON.stringify({
-    lancamentos:[], cartoes:[], dividas:[], assinaturas:[], patrimonio:{ativos:0,passivos:0}, categorias:categoriasPadrao
-  }));
+
+async function carregarEstado(){
+  const fallback = {lancamentos:[], cartoes:[], cartoesSalvos:[], dividas:[], assinaturas:[], categorias:categoriasPadrao};
+  let base = fallback;
+
+  if(key){
+    try{
+      const local = JSON.parse(localStorage.getItem(key) || "null");
+      if(local) base = {...base, ...local};
+    }catch{}
+  }
+
+  if(usuarioAtual){
+    try{
+      const snap = await db.collection("usuarios").doc(usuarioAtual.uid).get();
+      const remoto = snap.exists ? snap.data()?.estado : null;
+      if(remoto) base = {...base, ...remoto};
+    }catch(e){
+      console.warn("Falha ao carregar do Firestore:", e);
+    }
+  }
+
   base.categorias = normalizarCategorias(base.categorias || []);
   base.lancamentos = (base.lancamentos || []).map(normalizarLancamento);
   base.cartoes = base.cartoes || [];
-  base.dividas = base.dividas || [];
+  base.cartoesSalvos = base.cartoesSalvos || [];
+  base.dividas = (base.dividas || []).map(d=>({...d, pagamentos:d.pagamentos||[], quitada:!!d.quitada}));
   base.assinaturas = base.assinaturas || [];
-  base.patrimonio = base.patrimonio || {ativos:0,passivos:0};
   return base;
 }
-function salvarEstado(){ localStorage.setItem(key, JSON.stringify(estado)); }
+function salvarEstado(){
+  if(key){
+    try{ localStorage.setItem(key, JSON.stringify(estado)); }catch{}
+  }
+  if(!usuarioAtual) return;
+  if(salvarRemotoTimeout) clearTimeout(salvarRemotoTimeout);
+  salvarRemotoTimeout = setTimeout(()=>{
+    db.collection("usuarios").doc(usuarioAtual.uid).set(
+      { estado, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    ).catch(e=> console.warn("Falha ao salvar no Firestore:", e));
+  }, 500);
+}
 function normalizarCategorias(lista){ const nomes=new Set(); const ajustadas=[]; [...categoriasPadrao,...lista].forEach(c=>{ if(!c||!c.nome) return; const lower=c.nome.toLowerCase(); if(nomes.has(lower)) return; nomes.add(lower); ajustadas.push({nome:c.nome,teto:parseFloat(c.teto)||0,fixa:!!c.fixa}); }); return ajustadas; }
 function normalizarLancamento(l){ const recorrencia=l.recorrencia||(l.natureza==="fixa"?"fixa":"avulsa"); const variavel=l.variavel ?? (l.Variavel ?? (l.natureza==="variavel")); const valorPrevisto=typeof l.valorPrevisto==="number"?l.valorPrevisto:(typeof l.valor==="number"?l.valor:0); const valorPago=typeof l.valorPago==="number"?l.valorPago:(variavel?null:valorPrevisto); return {id:l.id||crypto.randomUUID(), desc:l.desc||l.descricao||"", data:l.data, tipo:l.tipo||"despesa", recorrencia, variavel:!!variavel, valorPrevisto, valorPago, categoria:l.categoria||"Geral", forma:l.forma||"N/D"}; }
 const valorEfetivo = l => (typeof l.valorPago==="number" ? l.valorPago : (l.valorPrevisto||0));
@@ -409,10 +489,24 @@ const mesKey = d => d.slice(0,7);
 const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const fmtValor = v => (v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 function entraNoMes(l, alvo){ const mesLanc=mesKey(l.data); return l.recorrencia==="fixa" ? mesLanc<=alvo : mesLanc===alvo; }
-function scrollToForm(){ document.getElementById("lancamentos").scrollIntoView({behavior:"smooth"}); }
+function scrollToForm(){
+  const btn=document.querySelector('.nav button[data-section="lancamentos"]');
+  if(btn) btn.click();
+  const alvo=document.getElementById("form-lancamento") || document.getElementById("lancamentos");
+  if(alvo) alvo.scrollIntoView({behavior:"smooth"});
+}
 function setFeedback(el,msg,type=""){ el.innerText=msg; el.className="feedback"+(type?" "+type:""); }
 
-document.querySelectorAll(".nav button").forEach(btn=>{ btn.onclick=()=>{ document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); const alvo=btn.dataset.section; document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active")); document.getElementById(alvo).classList.add("active"); document.getElementById("titulo-pagina").innerText=btn.innerText; }; });
+document.querySelectorAll(".nav button").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const alvo=btn.dataset.section;
+    document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active"));
+    document.getElementById(alvo).classList.add("active");
+    document.getElementById("titulo-pagina").innerText=btn.innerText;
+  };
+});
 
 // Lancamentos
  document.getElementById("data").value = hojeStr();
@@ -464,7 +558,11 @@ function removerCategoria(nome){ estado.categorias = estado.categorias.filter(c=
 
 // Cartoes
  document.getElementById("cartao-data").value = hojeStr();
-function adicionarCartao(){ const nome=document.getElementById("cartao-nome").value.trim(); const desc=document.getElementById("cartao-desc").value.trim(); const data=document.getElementById("cartao-data").value; const valor=parseFloat(document.getElementById("cartao-valor").value); const parcelas=parseInt(document.getElementById("cartao-parcelas").value,10); const fb=document.getElementById("feedback-cartao"); if(!nome||!desc||!data||!valor||valor<=0||!parcelas||parcelas<1){ setFeedback(fb,"Preencha cartao, descricao, data, valor e parcelas.","error");return; } const valorParcela=+(valor/parcelas).toFixed(2); const compra={id:crypto.randomUUID(), nome, desc, data, valor, parcelas, valorParcela}; estado.cartoes.push(compra); salvarEstado(); setFeedback(fb,"Compra registrada e parcelas distribuidas.","success"); ["cartao-nome","cartao-desc","cartao-valor"].forEach(id=>document.getElementById(id).value=""); document.getElementById("cartao-parcelas").value="1"; renderizarCartoes(); renderizarPlanejamento(); }
+function adicionarCartaoSalvo(){ const nome=document.getElementById("cartao-salvar-nome").value.trim(); if(!nome){return;} const existe=estado.cartoesSalvos.find(c=>c.toLowerCase()===nome.toLowerCase()); if(!existe){ estado.cartoesSalvos.push(nome); salvarEstado(); } document.getElementById("cartao-salvar-nome").value=""; renderizarCartoesSalvos(); preencherSelectCartoes(); }
+function removerCartaoSalvo(nome){ estado.cartoesSalvos = estado.cartoesSalvos.filter(c=>c!==nome); salvarEstado(); renderizarCartoesSalvos(); preencherSelectCartoes(); }
+function renderizarCartoesSalvos(){ const corpo=document.getElementById("lista-cartoes-salvos"); if(!corpo) return; corpo.innerHTML=""; if(!estado.cartoesSalvos.length){ const tr=document.createElement("tr"); tr.innerHTML=`<td class=\"muted\">Nenhum cartao salvo</td><td></td>`; corpo.appendChild(tr); return; } estado.cartoesSalvos.forEach(nome=>{ const tr=document.createElement("tr"); tr.innerHTML=`<td>${nome}</td><td><button class=\"action\" onclick=\"removerCartaoSalvo('${nome}')\">Remover</button></td>`; corpo.appendChild(tr); }); }
+function preencherSelectCartoes(){ const sel=document.getElementById("cartao-select"); if(!sel) return; const atual=sel.value; sel.innerHTML=""; estado.cartoesSalvos.forEach(nome=>{ const opt=document.createElement("option"); opt.value=nome; opt.textContent=nome; if(nome===atual) opt.selected=true; sel.appendChild(opt); }); if(!estado.cartoesSalvos.length){ const opt=document.createElement("option"); opt.value=""; opt.textContent="Cadastre um cartao"; sel.appendChild(opt); } }
+function adicionarCartao(){ const nome=document.getElementById("cartao-select").value; const desc=document.getElementById("cartao-desc").value.trim(); const data=document.getElementById("cartao-data").value; const valor=parseFloat(document.getElementById("cartao-valor").value); const parcelas=parseInt(document.getElementById("cartao-parcelas").value,10); const fb=document.getElementById("feedback-cartao"); if(!nome){ setFeedback(fb,"Cadastre e selecione um cartao.","error"); return; } if(!desc||!data||!valor||valor<=0||!parcelas||parcelas<1){ setFeedback(fb,"Preencha cartao, descricao, data, valor e parcelas.","error");return; } const valorParcela=+(valor/parcelas).toFixed(2); const compra={id:crypto.randomUUID(), nome, desc, data, valor, parcelas, valorParcela}; estado.cartoes.push(compra); salvarEstado(); setFeedback(fb,"Compra registrada e parcelas distribuidas.","success"); ["cartao-desc","cartao-valor"].forEach(id=>document.getElementById(id).value=""); document.getElementById("cartao-parcelas").value="1"; renderizarCartoes(); renderizarPlanejamento(); }
 function removerCartao(id){ estado.cartoes = estado.cartoes.filter(c=>c.id!==id); salvarEstado(); renderizarCartoes(); renderizarPlanejamento(); }
 function gerarParcelasCartao(c){ const parcelas=[]; const inicio=new Date(c.data+"T00:00:00"); for(let i=0;i<c.parcelas;i++){ const d=new Date(inicio); d.setMonth(d.getMonth()+i); parcelas.push({mes:mesKey(d.toISOString()), numero:i+1, valor:c.valorParcela, desc:c.desc, nome:c.nome, id:c.id}); } return parcelas; }
 function renderizarCartoes(){ const corpo=document.getElementById("lista-cartao"); const vazio=document.getElementById("vazio-cartao"); corpo.innerHTML=""; let todas=[]; estado.cartoes.forEach(c=> todas=todas.concat(gerarParcelasCartao(c))); todas.sort((a,b)=> a.mes.localeCompare(b.mes)); if(!todas.length){vazio.style.display="block";return;} vazio.style.display="none"; todas.forEach(p=>{ const tr=document.createElement("tr"); tr.innerHTML=`
@@ -477,15 +575,84 @@ function renderizarCartoes(){ const corpo=document.getElementById("lista-cartao"
 
 // Dividas
  document.getElementById("divida-data").value = hojeStr();
-function adicionarDivida(){ const nome=document.getElementById("divida-nome").value.trim(); const valor=parseFloat(document.getElementById("divida-valor").value); const juros=parseFloat(document.getElementById("divida-juros").value)||0; const parcelas=parseInt(document.getElementById("divida-parcelas").value,10); const data=document.getElementById("divida-data").value; const fb=document.getElementById("feedback-divida"); if(!nome||!valor||valor<=0||!parcelas||parcelas<1||!data){ setFeedback(fb,"Preencha nome, valor, parcelas e inicio.","error");return; } const valorParcela=+(valor/parcelas).toFixed(2); const divida={id:crypto.randomUUID(), nome, valor, juros, parcelas, data, valorParcela}; estado.dividas.push(divida); salvarEstado(); setFeedback(fb,"Divida cadastrada.","success"); ["divida-nome","divida-valor","divida-juros"].forEach(id=>document.getElementById(id).value=""); document.getElementById("divida-parcelas").value="1"; renderizarDividas(); renderizarPlanejamento(); }
+function adicionarDivida(){ const nome=document.getElementById("divida-nome").value.trim(); const valor=parseFloat(document.getElementById("divida-valor").value); const juros=parseFloat(document.getElementById("divida-juros").value)||0; const parcelas=parseInt(document.getElementById("divida-parcelas").value,10); const data=document.getElementById("divida-data").value; const fb=document.getElementById("feedback-divida"); if(!nome||!valor||valor<=0||!parcelas||parcelas<1||!data){ setFeedback(fb,"Preencha nome, valor, parcelas e inicio.","error");return; } const valorParcela=+(valor/parcelas).toFixed(2); const divida={id:crypto.randomUUID(), nome, valor, juros, parcelas, data, valorParcela, pagamentos:[], quitada:false}; estado.dividas.push(divida); salvarEstado(); setFeedback(fb,"Divida cadastrada.","success"); ["divida-nome","divida-valor","divida-juros"].forEach(id=>document.getElementById(id).value=""); document.getElementById("divida-parcelas").value="1"; renderizarDividas(); renderizarPlanejamento(); }
 function removerDivida(id){ estado.dividas = estado.dividas.filter(d=>d.id!==id); salvarEstado(); renderizarDividas(); renderizarPlanejamento(); }
-function gerarParcelasDivida(d){ const parcelas=[]; const inicio=new Date(d.data+"T00:00:00"); for(let i=0;i<d.parcelas;i++){ const dt=new Date(inicio); dt.setMonth(dt.getMonth()+i); const valor=+(d.valorParcela * (1 + d.juros/100)).toFixed(2); parcelas.push({mes:mesKey(dt.toISOString()), numero:i+1, valor, nome:d.nome, id:d.id}); } return parcelas; }
-function renderizarDividas(){ const corpo=document.getElementById("lista-dividas"); const vazio=document.getElementById("vazio-dividas"); corpo.innerHTML=""; let linhas=[]; estado.dividas.forEach(d=> linhas=linhas.concat(gerarParcelasDivida(d))); linhas.sort((a,b)=> a.mes.localeCompare(b.mes)); if(!linhas.length){vazio.style.display="block";return;} vazio.style.display="none"; linhas.forEach(p=>{ const totalParcelas=estado.dividas.find(d=>d.id===p.id)?.parcelas; const tr=document.createElement("tr"); tr.innerHTML=`
+function gerarParcelasDivida(d){ const parcelas=[]; if(d.quitada) return parcelas; const inicio=new Date(d.data+"T00:00:00"); for(let i=0;i<d.parcelas;i++){ const dt=new Date(inicio); dt.setMonth(dt.getMonth()+i); const valor=+(d.valorParcela * (1 + d.juros/100)).toFixed(2); const mes=mesKey(dt.toISOString()); const pago=(d.pagamentos||[]).includes(mes); parcelas.push({mes, numero:i+1, valor, nome:d.nome, id:d.id, status:pago?"pago":"pendente"}); } return parcelas; }
+function pagarParcela(dividaId, mes){ const d=estado.dividas.find(x=>x.id===dividaId); if(!d) return; d.pagamentos = Array.from(new Set([...(d.pagamentos||[]), mes])); salvarEstado(); renderizarDividas(); renderizarPlanejamento(); renderizarDashboard(); }
+function quitarDivida(dividaId){
+  const d=estado.dividas.find(x=>x.id===dividaId);
+  if(!d) return;
+
+  const parcelasRestantes = gerarParcelasDivida(d);
+  const totalRestante = parcelasRestantes.reduce((s,p)=>s+p.valor,0);
+  const confirmar = confirm(`Quitar a divida \"${d.nome}\" agora?\\nTotal restante estimado: ${fmtValor(totalRestante)}\\n\\nDeseja registrar como lancamento (despesa avulsa)?`);
+  if(confirmar){
+    const data = hojeStr();
+    estado.lancamentos.push({
+      id:crypto.randomUUID(),
+      desc:`Quitacao - ${d.nome}`,
+      data,
+      tipo:"despesa",
+      recorrencia:"avulsa",
+      variavel:false,
+      valorPrevisto:totalRestante,
+      valorPago:totalRestante,
+      categoria:"Contas",
+      forma:"Quitacao"
+    });
+  }
+
+  d.quitada=true;
+  d.pagamentos=[];
+  salvarEstado();
+  renderizarTudo();
+}
+function atualizarFiltroDividaMes(meses){ const sel=document.getElementById("filtro-divida-mes"); if(!sel) return; const atual=sel.value; sel.innerHTML=""; const opts=["todas", ...meses]; opts.forEach(m=>{ const opt=document.createElement("option"); opt.value=m; opt.textContent=m==="todas"?"Todos":m; sel.appendChild(opt); }); if(opts.includes(atual)) sel.value=atual; }
+function renderizarDividas(){
+  const corpo=document.getElementById("lista-dividas");
+  const vazio=document.getElementById("vazio-dividas");
+  const statusFiltro=document.getElementById("filtro-divida-status")?.value||"todas";
+  const mesFiltro=document.getElementById("filtro-divida-mes")?.value||"todas";
+  const busca=(document.getElementById("busca-divida")?.value||"").toLowerCase();
+  corpo.innerHTML="";
+
+  let linhas=[];
+  estado.dividas.forEach(d=> linhas=linhas.concat(gerarParcelasDivida(d)));
+  const quitadas = estado.dividas.filter(d=>d.quitada).map(d=>({mes:"—", numero:null, valor:0, nome:d.nome, id:d.id, status:"quitada"}));
+
+  const mesesUnicos=Array.from(new Set(linhas.map(l=>l.mes))).sort();
+  atualizarFiltroDividaMes(mesesUnicos);
+
+  const todasLinhas = linhas.concat(quitadas);
+  const filtradas = todasLinhas.filter(l=>{
+    const matchStatus = statusFiltro==="todas" ? true : l.status===statusFiltro;
+    const matchMes = mesFiltro==="todas" ? true : l.mes===mesFiltro;
+    const matchBusca = !busca || l.nome.toLowerCase().includes(busca) || String(l.mes).toLowerCase().includes(busca);
+    return matchStatus && matchMes && matchBusca;
+  });
+  filtradas.sort((a,b)=> String(a.mes).localeCompare(String(b.mes)));
+
+  if(!filtradas.length){vazio.style.display="block";return;}
+  vazio.style.display="none";
+
+  filtradas.forEach(p=>{
+    const totalParcelas=estado.dividas.find(d=>d.id===p.id)?.parcelas;
+    const tr=document.createElement("tr");
+    const statusLabel=p.status==="pago"?"Pago":(p.status==="quitada"?"Quitada":"Pendente");
+    const valorCell=p.status==="quitada"?"--":fmtValor(p.valor);
+    const parcelaCell=p.status==="quitada"?"--":`${p.numero}/${totalParcelas}`;
+    const acaoPagar=p.status==="pendente"?`<button class="action" onclick="pagarParcela('${p.id}','${p.mes}')">Registrar pagamento</button>`:"";
+    const btnQuitar=p.status==="quitada"?"":` <button class="action" onclick="quitarDivida('${p.id}')">Quitar</button>`;
+    tr.innerHTML=`
       <td>${p.nome}</td>
-      <td>${p.numero}/${totalParcelas}</td>
+      <td>${parcelaCell}</td>
       <td>${p.mes}</td>
-      <td>${fmtValor(p.valor)}</td>
-      <td><button class="action" onclick="removerDivida('${p.id}')">Excluir divida</button></td>`; corpo.appendChild(tr); }); }
+      <td>${valorCell}</td>
+      <td>${statusLabel}</td>
+      <td>${acaoPagar}${btnQuitar} <button class="action" onclick="removerDivida('${p.id}')">Excluir</button></td>`;
+    corpo.appendChild(tr);
+  });
+}
 
 // Assinaturas
 function adicionarAssinatura(){ const nome=document.getElementById("ass-nome").value.trim(); const categoria=document.getElementById("ass-cat").value.trim()||"Assinatura"; const valor=parseFloat(document.getElementById("ass-valor").value); const dia=parseInt(document.getElementById("ass-dia").value,10); const forma=document.getElementById("ass-forma").value.trim()||"Cartao"; const status=document.getElementById("ass-status").value; const fb=document.getElementById("feedback-ass"); if(!nome||!valor||valor<=0||!dia){ setFeedback(fb,"Preencha nome, valor e dia de cobranca.","error");return; } estado.assinaturas.push({id:crypto.randomUUID(), nome, categoria, valor, dia, forma, status}); salvarEstado(); setFeedback(fb,"Assinatura salva.","success"); ["ass-nome","ass-cat","ass-valor","ass-dia","ass-forma"].forEach(id=>document.getElementById(id).value=""); document.getElementById("ass-status").value="ativa"; renderizarAssinaturas(); renderizarPlanejamento(); }
@@ -498,27 +665,102 @@ function renderizarAssinaturas(){ const corpo=document.getElementById("lista-ass
       <td>${a.status}</td>
       <td><button class="action" onclick="removerAssinatura('${a.id}')">Excluir</button></td>`; corpo.appendChild(tr); }); }
 
-// Patrimonio
-function salvarPatrimonio(){ const ativos=parseFloat(document.getElementById("pat-ativos").value)||0; const passivos=parseFloat(document.getElementById("pat-passivos").value)||0; estado.patrimonio={ativos,passivos}; salvarEstado(); setFeedback(document.getElementById("feedback-pat"),"Patrimonio atualizado.","success"); renderizarPatrimonio(); }
-function renderizarPatrimonio(){ const {ativos,passivos}=estado.patrimonio; document.getElementById("pat-ativos").value=ativos; document.getElementById("pat-passivos").value=passivos; document.getElementById("pat-ativos-v").innerText=fmtValor(ativos); document.getElementById("pat-passivos-v").innerText=fmtValor(passivos); const liquido=ativos-passivos; document.getElementById("pat-liquido").innerText=fmtValor(liquido); document.getElementById("pat-info").innerText=liquido>=0?"Voce esta no positivo.":"Atencao: patrimonio negativo."; }
+// Investimentos (simulacao)
+function aliquotaIRRegressivo(meses){
+  if(meses<=6) return 0.225;
+  if(meses<=12) return 0.20;
+  if(meses<=24) return 0.175;
+  return 0.15;
+}
+function taxaMensal(rentab, tipo){
+  const r = (rentab||0)/100;
+  if(tipo==="mensal") return r;
+  return Math.pow(1+r, 1/12) - 1;
+}
+function simularInvestimento(){
+  const tipo=document.getElementById("invest-tipo").value;
+  const indexador=document.getElementById("invest-indexador").value;
+  const inicial=parseFloat(document.getElementById("invest-inicial").value)||0;
+  const mensal=parseFloat(document.getElementById("invest-mensal").value)||0;
+  const prazo=parseInt(document.getElementById("invest-prazo").value,10);
+  const prazoTipo=document.getElementById("invest-prazo-tipo").value;
+  const rentab=parseFloat(document.getElementById("invest-rentab").value);
+  const rentabTipo=document.getElementById("invest-rentab-tipo").value;
+  const fb=document.getElementById("invest-feedback");
+  const out=document.getElementById("invest-resultado");
+
+  if(!prazo || prazo<1 || isNaN(rentab)){
+    setFeedback(fb,"Preencha prazo e rentabilidade validos.","error");
+    out.style.display="none";
+    return;
+  }
+  if(inicial<0 || mensal<0){
+    setFeedback(fb,"Valores de aporte nao podem ser negativos.","error");
+    out.style.display="none";
+    return;
+  }
+
+  const mesesTotal = prazoTipo==="anos" ? prazo*12 : prazo;
+  const i = taxaMensal(rentab, rentabTipo);
+  let saldo = inicial;
+  let aporteTotal = inicial;
+
+  for(let m=1;m<=mesesTotal;m++){
+    saldo = saldo * (1+i);
+    saldo += mensal;
+    aporteTotal += mensal;
+  }
+
+  const bruto = saldo;
+  const ganhos = Math.max(0, bruto - aporteTotal);
+  const isentoIR = (tipo==="lci_lca");
+  const aliq = isentoIR ? 0 : aliquotaIRRegressivo(mesesTotal);
+  const ir = ganhos * aliq;
+  const liquido = bruto - ir;
+
+  setFeedback(fb,"Simulacao calculada.","success");
+  out.style.display="block";
+  out.innerHTML = `
+    <h4>Resultado</h4>
+    <div class="grid cards">
+      <div class="card"><h3>Aporte total</h3><div class="value">${fmtValor(aporteTotal)}</div><div class="muted">Inicial + mensal</div></div>
+      <div class="card"><h3>Valor final (bruto)</h3><div class="value">${fmtValor(bruto)}</div><div class="muted">Indexador: ${indexador.toUpperCase()}</div></div>
+      <div class="card"><h3>IR estimado</h3><div class="value red">${fmtValor(ir)}</div><div class="muted">${isentoIR ? "Isento (LCI/LCA)" : `Aliquota: ${(aliq*100).toFixed(1)}%`}</div></div>
+      <div class="card"><h3>Valor final (liquido)</h3><div class="value green">${fmtValor(liquido)}</div><div class="muted">Ganhos: ${fmtValor(ganhos)}</div></div>
+    </div>
+  `;
+}
 
 // Projecao
-function projetarAno(){ const ano=new Date().getFullYear(); const mesesProj=Array.from({length:12},(_,i)=>({mes:i,receitas:0,despesas:0,cartao:0,dividas:0,assinaturas:0})); estado.lancamentos.forEach(l=>{ const d=new Date(l.data+"T00:00:00"); const baseMes=d.getMonth(); const baseAno=d.getFullYear(); const campo=l.tipo==="receita"?"receitas":"despesas"; const valor=valorEfetivo(l); if(l.recorrencia==="fixa"){ for(let m=0;m<12;m++){ if(baseAno<ano || (baseAno===ano && baseMes<=m)){ mesesProj[m][campo]+=valor; } } } else if(baseAno===ano){ mesesProj[baseMes][campo]+=valor; } }); estado.cartoes.forEach(c=>{ gerarParcelasCartao(c).forEach(p=>{ const [y,m]=p.mes.split("-").map(Number); if(y===ano) mesesProj[m-1].cartao += p.valor; }); }); estado.dividas.forEach(d=>{ gerarParcelasDivida(d).forEach(p=>{ const [y,m]=p.mes.split("-").map(Number); if(y===ano) mesesProj[m-1].dividas += p.valor; }); }); estado.assinaturas.filter(a=>a.status==="ativa").forEach(a=>{ for(let m=0;m<12;m++){ mesesProj[m].assinaturas += a.valor; } }); mesesProj.forEach(m=>{ m.saldo = m.receitas - (m.despesas + m.cartao + m.dividas + m.assinaturas); }); return mesesProj; }
+function projetarAno(){ const ano=new Date().getFullYear(); const mesesProj=Array.from({length:12},(_,i)=>({mes:i,receitas:0,despesas:0,cartao:0,dividas:0,assinaturas:0})); estado.lancamentos.forEach(l=>{ const d=new Date(l.data+"T00:00:00"); const baseMes=d.getMonth(); const baseAno=d.getFullYear(); const campo=l.tipo==="receita"?"receitas":"despesas"; const valor=valorEfetivo(l); if(l.recorrencia==="fixa"){ for(let m=0;m<12;m++){ if(baseAno<ano || (baseAno===ano && baseMes<=m)){ mesesProj[m][campo]+=valor; } } } else if(baseAno===ano){ mesesProj[baseMes][campo]+=valor; } }); estado.cartoes.forEach(c=>{ gerarParcelasCartao(c).forEach(p=>{ const [y,m]=p.mes.split("-").map(Number); if(y===ano) mesesProj[m-1].cartao += p.valor; }); }); estado.dividas.forEach(d=>{ gerarParcelasDivida(d).forEach(p=>{ const [y,m]=p.mes.split("-").map(Number); if(y===ano) mesesProj[m-1].dividas += p.valor; }); }); estado.assinaturas.filter(a=>a.status==="ativa").forEach(a=>{ for(let m=0;m<12;m++){ mesesProj[m].assinaturas += a.valor; } }); mesesProj.forEach(m=>{ m.saldo = m.receitas - (m.despesas + m.cartao + m.dividas); }); return mesesProj; }
 
-function renderizarDashboard(){ const hoje=new Date(); const mesAtual=hoje.getMonth(); const proj=projetarAno(); const mes=proj[mesAtual]; document.getElementById("dash-receitas").innerText=fmtValor(mes.receitas); document.getElementById("dash-despesas").innerText=fmtValor(mes.despesas + mes.cartao + mes.dividas + mes.assinaturas); document.getElementById("dash-saldo").innerText=fmtValor(mes.saldo); document.getElementById("dash-recorrentes").innerText=fmtValor(totalPorRecorrencia("fixa")); document.getElementById("dash-avulsos").innerText=`Avulsos: ${fmtValor(totalPorRecorrencia("avulsa"))}`; document.getElementById("dash-receitas-info").innerText="Inclui receitas recorrentes."; document.getElementById("dash-despesas-info").innerText="Considera valores pagos ou previstos quando pendentes."; document.getElementById("dash-saldo-info").innerText=mes.saldo>=0?"Mes positivo.":"Mes no negativo."; renderizarTetosDashboard(); }
+function renderizarDashboard(){ const hoje=new Date(); const mesAtual=hoje.getMonth(); const proj=projetarAno(); const mes=proj[mesAtual]; document.getElementById("dash-receitas").innerText=fmtValor(mes.receitas); document.getElementById("dash-despesas").innerText=fmtValor(mes.despesas + mes.cartao + mes.dividas); document.getElementById("dash-saldo").innerText=fmtValor(mes.saldo); document.getElementById("dash-recorrentes").innerText=fmtValor(totalPorRecorrencia("fixa")); document.getElementById("dash-avulsos").innerText=`Avulsos: ${fmtValor(totalPorRecorrencia("avulsa"))}`; document.getElementById("dash-receitas-info").innerText="Inclui receitas recorrentes."; document.getElementById("dash-despesas-info").innerText="Assinaturas sao somente informativas (nao entram no orcamento)."; document.getElementById("dash-saldo-info").innerText=mes.saldo>=0?"Mes positivo.":"Mes no negativo."; renderizarTetosDashboard(); }
 function totalPorRecorrencia(rec){ return estado.lancamentos.filter(l=>l.recorrencia===rec && l.tipo==="despesa").reduce((s,l)=>s+valorEfetivo(l),0); }
-function renderizarPlanejamento(){ const proj=projetarAno(); const corpo=document.getElementById("tabela-planejamento"); const corpoAno=document.getElementById("tabela-planejamento-ano"); [corpo,corpoAno].forEach(c=> c.innerHTML=""); proj.forEach(m=>{ const tr=document.createElement("tr"); tr.innerHTML=`
+function renderizarPlanejamento(){ const proj=projetarAno(); const corpoAno=document.getElementById("tabela-planejamento-ano"); if(!corpoAno) return; corpoAno.innerHTML=""; proj.forEach(m=>{ const tr=document.createElement("tr"); tr.innerHTML=`
       <td><span class="badge-month">${meses[m.mes]}</span></td>
       <td>${fmtValor(m.receitas)}</td>
       <td>${fmtValor(m.despesas)}</td>
       <td>${fmtValor(m.cartao)}</td>
       <td>${fmtValor(m.dividas)}</td>
       <td>${fmtValor(m.assinaturas)}</td>
-      <td class="${m.saldo>=0?'alert-positive':'alert-negative'}">${fmtValor(m.saldo)}</td>`; corpo.appendChild(tr.cloneNode(true)); corpoAno.appendChild(tr); }); }
+      <td class="${m.saldo>=0?'alert-positive':'alert-negative'}">${fmtValor(m.saldo)}</td>`; corpoAno.appendChild(tr); }); }
 
-function renderizarTudo(){ renderizarCategorias(); renderizarLancamentos(); renderizarCartoes(); renderizarDividas(); renderizarAssinaturas(); renderizarPatrimonio(); renderizarPlanejamento(); renderizarDashboard(); }
-function sair(){ localStorage.removeItem("usuarioLogado"); window.location.href = "INDEX.html"; }
-renderizarTudo();
+function renderizarTudo(){ renderizarCategorias(); renderizarCartoesSalvos(); preencherSelectCartoes(); renderizarLancamentos(); renderizarCartoes(); renderizarDividas(); renderizarAssinaturas(); renderizarPlanejamento(); renderizarDashboard(); }
+function sair(){
+  auth.signOut().finally(()=> window.location.href = "INDEX.html");
+}
+
+auth.onAuthStateChanged(async (user)=>{
+  if(!user){
+    window.location.href = "INDEX.html";
+    return;
+  }
+  usuarioAtual = user;
+  document.getElementById("usuario").innerText = user.email || user.uid;
+  key = `financas_${user.uid}`;
+  estado = await carregarEstado();
+  renderizarTudo();
+});
 </script>
 </body>
 </html>
